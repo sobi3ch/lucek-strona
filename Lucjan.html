@@ -2,27 +2,427 @@
 <html lang="pl">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lucjan Sobieszczański</title>
   <style>
-    body { background-color: #39af6b; }
-    h1 { text-align: center; }
-    .name { color: green; }
-    .title { color: yellow; }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      background-color: #39af6b;
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding-top: 8vh;
+      font-family: 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', system-ui, -apple-system, sans-serif;
+      overflow-x: hidden;
+      cursor: default;
+    }
+    h1 {
+      text-align: center;
+      margin: 0.15em 0;
+      font-size: clamp(2.8rem, 8vw, 5rem);
+      letter-spacing: 2px;
+      user-select: none;
+    }
+    .title {
+      color: yellow;
+      text-shadow: 3px 3px 0px #b59a00, 5px 5px 8px rgba(0, 0, 0, 0.25);
+    }
+    .name {
+      color: #0b5320;
+      text-shadow: 3px 3px 0px #04270d, 5px 5px 8px rgba(0, 0, 0, 0.25);
+    }
+    .tip {
+      margin-top: 25px;
+      font-size: clamp(0.95rem, 2.5vw, 1.25rem);
+      color: #f7fff7;
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.35);
+      user-select: none;
+      animation: pulse 2.2s infinite ease-in-out;
+      background: rgba(0, 0, 0, 0.15);
+      padding: 10px 22px;
+      border-radius: 25px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 0.92; }
+      50% { transform: scale(1.03); opacity: 1; }
+    }
+
+    /* Pikachu / Pichu cursor follower container */
+    .pichu-follower {
+      position: fixed;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      z-index: 9999;
+      will-change: transform;
+      user-select: none;
+    }
+
     .portrait {
-        display: block;
-        margin: 0 auto;
-        position: fixed;
-        top: -70px;
-        right: -50px;
-        width: 50%;
-        scale: 0.5 }
+      display: block;
+      width: clamp(110px, 16vw, 150px);
+      height: auto;
+      transform-origin: 50% 90%;
+      filter: drop-shadow(0 12px 14px rgba(0, 0, 0, 0.25));
+      will-change: transform;
+    }
+
+    /* Cartoon speech bubble */
+    .speech-bubble {
+      position: absolute;
+      top: -34px;
+      left: 50%;
+      transform: translateX(-50%) scale(0);
+      background: #ffffff;
+      color: #1a1a1a;
+      font-weight: 800;
+      font-size: 14px;
+      padding: 5px 12px;
+      border-radius: 14px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+      border: 2px solid #222;
+      white-space: nowrap;
+      pointer-events: none;
+      transition: transform 0.18s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.18s;
+      opacity: 0;
+      z-index: 10001;
+    }
+    .speech-bubble::after {
+      content: '';
+      position: absolute;
+      bottom: -6px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-width: 6px 6px 0;
+      border-style: solid;
+      border-color: #222 transparent;
+      display: block;
+      width: 0;
+    }
+    .speech-bubble.show {
+      transform: translateX(-50%) scale(1);
+      opacity: 1;
+    }
+
+    /* Floating particles / sparks / sweat drops */
+    .particle {
+      position: fixed;
+      pointer-events: none;
+      z-index: 9998;
+      font-size: 22px;
+      user-select: none;
+      will-change: transform, opacity;
+      animation: float-fade 0.75s forwards ease-out;
+    }
+    @keyframes float-fade {
+      0% {
+        transform: translate(-50%, -50%) scale(0.5) translateY(0);
+        opacity: 1;
+      }
+      50% {
+        transform: translate(-50%, -50%) scale(1.3) translateY(-18px);
+        opacity: 0.95;
+      }
+      100% {
+        transform: translate(-50%, -50%) scale(0.7) translateY(-38px);
+        opacity: 0;
+      }
+    }
+
+    /* Dust puff circles */
+    .dust-puff {
+      position: fixed;
+      pointer-events: none;
+      z-index: 9997;
+      width: 16px;
+      height: 16px;
+      background: rgba(255, 255, 255, 0.65);
+      border-radius: 50%;
+      animation: dust-fade 0.4s forwards ease-out;
+    }
+    @keyframes dust-fade {
+      0% {
+        transform: translate(-50%, -50%) scale(0.4);
+        opacity: 0.85;
+      }
+      100% {
+        transform: translate(-50%, -50%) scale(2.4);
+        opacity: 0;
+      }
+    }
   </style>
 </head>
 <body>
   <h1 class="title">Lucjan</h1>
   <h1 class="name">Sobieszczański</h1>
-  <img src="./Pichu.webp" alt="Lucjan Sobieszczański" class="portrait">
+  <div class="tip">🐾 Ruszaj myszką, by Pikachu za Tobą gonił! Kliknij, by podskoczył! ⚡</div>
+
+  <!-- Pikachu / Pichu follower -->
+  <div id="pikachu-follower" class="pichu-follower">
+    <div id="speech-bubble" class="speech-bubble">Hej! 👋</div>
+    <img src="./Pichu.webp" alt="Lucjan Sobieszczański" class="portrait" id="pikachu-img">
+  </div>
+
+  <script>
+    (function () {
+      const follower = document.getElementById('pikachu-follower');
+      const pichuImg = document.getElementById('pikachu-img');
+      const bubble = document.getElementById('speech-bubble');
+
+      // Start at comfortable corner position
+      let posX = Math.max(90, window.innerWidth - 110);
+      let posY = Math.max(100, window.innerHeight - 100);
+      let mouseX = posX;
+      let mouseY = posY;
+      let vx = 0;
+      let vy = 0;
+      let facing = 1; // 1 = facing left towards center, -1 = facing right
+      let targetFacing = 1;
+      let walkCycle = 0;
+      let idleTimer = 0;
+      let landSquash = 0;
+      let isJumping = false;
+      let jumpY = 0;
+      let jumpVy = 0;
+      let spinAngle = 0;
+      let jumpSpinSpeed = 0;
+      let lastMoveTime = performance.now();
+      let hasStarted = false;
+      let isSleeping = false;
+      let bubbleTimeout = null;
+
+      // Show initial greeting
+      setTimeout(() => {
+        if (!hasStarted) {
+          showSpeech('Hej! 👋 Złap mnie!', 2500);
+        }
+      }, 500);
+
+      // Playful Web Audio API 8-bit squeak
+      function playChirp() {
+        try {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (!AudioContext) return;
+          const ctx = new AudioContext();
+          const now = ctx.currentTime;
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          
+          // Cute 2-tone "Pi-ka!" chirp
+          osc.frequency.setValueAtTime(750, now);
+          osc.frequency.exponentialRampToValueAtTime(1250, now + 0.07);
+          osc.frequency.setValueAtTime(1050, now + 0.08);
+          osc.frequency.exponentialRampToValueAtTime(1600, now + 0.2);
+
+          gain.gain.setValueAtTime(0.08, now);
+          gain.gain.linearRampToValueAtTime(0.12, now + 0.07);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.26);
+        } catch (e) {}
+      }
+
+      function showSpeech(text, duration = 1200) {
+        if (bubbleTimeout) clearTimeout(bubbleTimeout);
+        bubble.textContent = text;
+        bubble.classList.add('show');
+        bubbleTimeout = setTimeout(() => {
+          bubble.classList.remove('show');
+        }, duration);
+      }
+
+      function spawnParticle(char, x, y) {
+        const el = document.createElement('div');
+        el.className = 'particle';
+        el.textContent = char;
+        el.style.left = `${x}px`;
+        el.style.top = `${y}px`;
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 750);
+      }
+
+      function spawnDust(x, y) {
+        const el = document.createElement('div');
+        el.className = 'dust-puff';
+        el.style.left = `${x}px`;
+        el.style.top = `${y}px`;
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 450);
+      }
+
+      // Pointer tracking (mouse and touch)
+      function updatePointer(x, y) {
+        if (!hasStarted) {
+          hasStarted = true;
+          showSpeech('Pikachu! ⚡', 1000);
+          jumpVy = -8;
+          isJumping = true;
+        }
+        mouseX = x;
+        mouseY = y;
+        lastMoveTime = performance.now();
+        if (isSleeping) {
+          isSleeping = false;
+          showSpeech('!', 600);
+          jumpVy = -9;
+          isJumping = true;
+        }
+      }
+
+      window.addEventListener('pointermove', (e) => {
+        updatePointer(e.clientX, e.clientY);
+      });
+
+      window.addEventListener('touchmove', (e) => {
+        if (e.touches.length > 0) {
+          updatePointer(e.touches[0].clientX, e.touches[0].clientY);
+        }
+      }, { passive: true });
+
+      // Click / tap reaction: joyful hop & backflip
+      window.addEventListener('pointerdown', (e) => {
+        playChirp();
+        isJumping = true;
+        jumpVy = -13.5;
+        jumpSpinSpeed = (targetFacing <= 0 ? 1 : -1) * 24; // 360 backflip
+
+        const phrases = ["Pichu! ⚡", "Pika-pika! ✨", "⚡ Bzzzzt! ⚡", "💛 Chu!", "Wheee! 🎉", "Pika! ⚡"];
+        showSpeech(phrases[Math.floor(Math.random() * phrases.length)], 1100);
+
+        const sparks = ['⚡', '✨', '💛', '⭐'];
+        for (let i = 0; i < 3; i++) {
+          setTimeout(() => {
+            const icon = sparks[Math.floor(Math.random() * sparks.length)];
+            spawnParticle(icon, posX + (Math.random() * 50 - 25), posY + (Math.random() * 30 - 30));
+          }, i * 70);
+        }
+      });
+
+      // Main physics & animation loop
+      let lastTime = performance.now();
+
+      function animate(time) {
+        const dt = Math.min((time - lastTime) / 16.66, 2.0); // frame delta normalization
+        lastTime = time;
+
+        // Target: follow cursor closely with slight vertical offset so it looks up at cursor
+        const targetX = hasStarted ? mouseX : posX;
+        const targetY = hasStarted ? mouseY + 15 : posY;
+
+        // Spring physics with cartoon overshoot
+        const spring = 0.058;
+        const friction = 0.80;
+
+        const dx = targetX - posX;
+        const dy = targetY - posY;
+
+        vx += dx * spring * dt;
+        vy += dy * spring * dt;
+        vx *= Math.pow(friction, dt);
+        vy *= Math.pow(friction, dt);
+
+        posX += vx * dt;
+        posY += vy * dt;
+
+        const speed = Math.hypot(vx, vy);
+
+        // Turn direction with smooth horizontal flip
+        if (Math.abs(vx) > 0.4) {
+          targetFacing = vx > 0 ? -1 : 1;
+        }
+        facing += (targetFacing - facing) * 0.22 * dt;
+
+        // Animation attributes
+        let waddleAngle = 0;
+        let bounceY = 0;
+        let leanAngle = 0;
+        let squashStretch = 0;
+
+        // Snooze / Idle detection (after 3.5s of no pointer movement)
+        const timeSinceMove = time - lastMoveTime;
+        if (hasStarted && timeSinceMove > 3500 && speed < 0.5) {
+          if (!isSleeping) {
+            isSleeping = true;
+            showSpeech('Zzz... 💤', 3500);
+          }
+          bounceY = Math.sin(time * 0.003) * 3;
+          squashStretch = -0.05;
+        } else if (speed > 0.6) {
+          // Running animation: hilarious side-to-side waddling
+          walkCycle += Math.min(speed * 0.16, 0.65) * dt;
+          waddleAngle = Math.sin(walkCycle) * Math.min(speed * 2.2, 20);
+          bounceY = -Math.abs(Math.sin(walkCycle)) * Math.min(speed * 1.1, 14);
+
+          // Leaning forward in direction of horizontal motion
+          leanAngle = Math.max(-28, Math.min(28, vx * 1.5));
+
+          // Cartoon stretch while running fast
+          squashStretch = Math.min(speed * 0.016, 0.32);
+
+          // Puffs of dust when sprinting
+          if (speed > 8 && Math.random() < 0.25) {
+            spawnDust(posX, posY + pichuImg.offsetHeight * 0.85);
+          }
+
+          // Panicked sweat drop when dragged frantically fast
+          if (speed > 17 && Math.random() < 0.08) {
+            spawnParticle('💦', posX + (targetFacing > 0 ? 25 : -25), posY - 10);
+          }
+        } else {
+          // Idle breathing
+          idleTimer += 0.04 * dt;
+          waddleAngle = Math.sin(idleTimer * 1.2) * 3;
+          bounceY = Math.sin(idleTimer * 2) * 3;
+          leanAngle = 0;
+          squashStretch = Math.sin(idleTimer * 2) * 0.03;
+        }
+
+        // Jump / Backflip handling
+        if (isJumping) {
+          jumpY += jumpVy * dt;
+          jumpVy += 0.75 * dt; // gravity
+          spinAngle += jumpSpinSpeed * dt;
+          if (jumpY >= 0) {
+            jumpY = 0;
+            jumpVy = 0;
+            isJumping = false;
+            spinAngle = 0;
+            landSquash = 0.38; // squish upon landing
+          }
+        }
+
+        // Landing squish recovery
+        landSquash *= Math.pow(0.85, dt);
+
+        // Calculate scales
+        const scaleX = facing * (1 - squashStretch * 0.45 + landSquash * 0.5);
+        const scaleY = (1 + squashStretch - landSquash * 0.4);
+        const totalRot = waddleAngle + leanAngle + spinAngle;
+
+        // Apply positions & transforms
+        const imgWidth = pichuImg.offsetWidth || 130;
+        const imgHeight = pichuImg.offsetHeight || 130;
+
+        follower.style.transform = `translate3d(${posX - imgWidth / 2}px, ${posY - imgHeight * 0.85}px, 0)`;
+        pichuImg.style.transform = `translateY(${jumpY + bounceY}px) scale(${scaleX}, ${scaleY}) rotate(${totalRot}deg)`;
+
+        requestAnimationFrame(animate);
+      }
+
+      requestAnimationFrame(animate);
+    })();
+  </script>
 </body>
 </html>
-
-
